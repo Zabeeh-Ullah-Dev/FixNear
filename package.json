@@ -1,0 +1,32 @@
+{
+  "name": "fixnear",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [
+    "local-services-finder",
+    "home-services",
+    "service-marketplace",
+    "react",
+    "vite",
+    "responsive-web-app",
+    "local-discovery"
+  ],
+  "author": "Zabeeh Ullah",
+  "license": "MIT",
+  "description": "A React local services finder prototype for discovering nearby electricians, plumbers, mechanics, and technicians.",
+  "dependencies": {
+    "lucide-react": "^1.70.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.2.1",
+    "playwright": "^1.65.0",
+    "vite": "^8.3.6"
+  },
+  "type": "module"
+}
