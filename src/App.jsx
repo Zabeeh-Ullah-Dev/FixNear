@@ -91,7 +91,7 @@ function MuseModule() {
   }, []);
   return <>
     {user && <div className="user-module"><span>{user.nickname || user.email?.split('@')[0]}</span><button type="button" onClick={() => fetch('/app-session/logout?app_id=' + (location.pathname.split('/')[2] || ''), { method: 'POST' }).then(() => location.reload())}>Log out</button></div>}
-    <a className={`muse-badge ${user ? 'icon-only' : ''}`} href="https://museai.im/home" target="_blank" rel="noopener noreferrer"><img src="/assets/images/icon.png" alt="" aria-hidden="true" /><span style={user ? { display: 'none' } : undefined}>Build by MuseWork</span></a>
+    <a className={`muse-badge ${user ? 'icon-only' : ''}`} href="https://museai.im/home" target="_blank" rel="noopener noreferrer"><img src="/assets/images/icon.png" alt="" aria-hidden="true" /><span style={user ? { display: 'none' } : undefined}>Built by MuseWork</span></a>
   </>;
 }
 
@@ -109,19 +109,24 @@ export default function App() {
   const searchRef = useRef(null);
   const filtered = useMemo(() => {
     const normalized = query.trim().toLowerCase();
+    const location = locationQuery.trim().toLowerCase();
     const result = services.filter((service) => {
       const matchesText = !normalized || [service.name, service.trade, service.detail, service.neighborhood].some((item) => item.toLowerCase().includes(normalized));
       const matchesCategory = category === 'All services' || service.trade === category;
       const matchesNeighborhood = neighborhood === 'All neighborhoods' || service.neighborhood === neighborhood;
       const matchesPrice = priceCap === 'any' || service.price <= Number(priceCap);
-      return matchesText && matchesCategory && matchesNeighborhood && matchesPrice;
+      // All sample listings are in Peshawar, so a location of "Peshawar"
+      // (or a prefix of it) matches every listing; any other text matches
+      // the listing's neighborhood, case-insensitively.
+      const matchesLocation = !location || 'peshawar'.includes(location) || service.neighborhood.toLowerCase().includes(location);
+      return matchesText && matchesCategory && matchesNeighborhood && matchesPrice && matchesLocation;
     });
     if (sort === 'price-low') result.sort((a, b) => a.price - b.price);
     if (sort === 'rating') result.sort((a, b) => b.rating - a.rating);
     return result;
-  }, [query, category, neighborhood, sort, priceCap]);
+  }, [query, locationQuery, category, neighborhood, sort, priceCap]);
   const shownReviews = useMemo(() => [...reviews].sort((a, b) => reviewSort === 'Top rated' ? b.stars - a.stars || a.daysAgo - b.daysAgo : a.daysAgo - b.daysAgo), [reviewSort]);
-  function clearFilters() { setQuery(''); setCategory('All services'); setNeighborhood('All neighborhoods'); setPriceCap('any'); setSort('recommended'); }
+  function clearFilters() { setQuery(''); setLocationQuery('Peshawar'); setCategory('All services'); setNeighborhood('All neighborhoods'); setPriceCap('any'); setSort('recommended'); }
   function scrollToListings() { document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' }); }
   const closeBooking = useCallback(() => setBookingService(null), []);
   function showBookingSuccess() { setToast(true); window.setTimeout(() => setToast(false), 4500); }
@@ -159,7 +164,7 @@ export default function App() {
       </section>
 
       <section className="services-section content-wrap" id="services" aria-labelledby="services-title"><div className="section-heading services-heading"><div><p className="eyebrow">THE LOCAL DISPATCH BOARD</p><h2 id="services-title">Good hands, nearby.</h2><p className="section-subtitle">A preview of pros around Peshawar. Every listing below is illustrative demo content.</p></div><span className="demo-chip"><span className="chip-dot" /> DEMO LISTINGS</span></div>
-        <div className="filters-row"><div className="category-tabs" role="group" aria-label="Filter by service type">{categories.map(({ name, icon: Icon }) => <button className={category === name ? 'active' : ''} type="button" key={name} onClick={() => setCategory(name)}><Icon size={15} />{name === 'All services' ? 'All' : name}</button>)}</div><div className="extra-filters"><label className="select-control"><MapPin size={15} /><span className="sr-only">Neighborhood</span><select value={neighborhood} onChange={(event) => setNeighborhood(event.target.value)}>{neighborhoods.map((place) => <option key={place}>{place}</option>)}</select><ChevronDown size={14} /></label><label className="select-control"><SlidersHorizontal size={15} /><span className="sr-only">Maximum visit price</span><select value={priceCap} onChange={(event) => setPriceCap(event.target.value)}><option value="any">Any price</option><option value="1700">Under Rs 1,700</option><option value="2000">Under Rs 2,000</option><option value="2500">Under Rs 2,500</option></select><ChevronDown size={14} /></label></div></div>
+        <div className="filters-row"><div className="category-tabs" role="group" aria-label="Filter by service type">{categories.map(({ name, icon: Icon }) => <button className={category === name ? 'active' : ''} type="button" key={name} onClick={() => setCategory(name)}><Icon size={15} />{name === 'All services' ? 'All' : name}</button>)}</div><div className="extra-filters"><label className="select-control"><MapPin size={15} /><span className="sr-only">Neighborhood</span><select value={neighborhood} onChange={(event) => setNeighborhood(event.target.value)}>{neighborhoods.map((place) => <option key={place}>{place}</option>)}</select><ChevronDown size={14} /></label><label className="select-control"><SlidersHorizontal size={15} /><span className="sr-only">Maximum visit price</span><select value={priceCap} onChange={(event) => setPriceCap(event.target.value)}><option value="any">Any price</option><option value="1700">Up to Rs 1,700</option><option value="2000">Up to Rs 2,000</option></select><ChevronDown size={14} /></label></div></div>
         <div className="results-topline"><span><b>{filtered.length.toString().padStart(2, '0')}</b> sample professionals</span><label className="sort-control">Sort by <select value={sort} onChange={(event) => setSort(event.target.value)}><option value="recommended">Recommended</option><option value="rating">Top rated</option><option value="price-low">Price: low to high</option></select><ChevronDown size={13} /></label></div>
         {filtered.length ? <div className="provider-grid">{filtered.map((service) => <ProviderCard key={service.id} service={service} onBook={setBookingService} />)}</div> : <div className="empty-state"><span className="empty-icon"><Search size={22} /></span><h3>No matches on this board</h3><p>Try another trade or neighborhood to see more sample listings.</p><button className="button button-quiet" type="button" onClick={clearFilters}>Clear filters</button></div>}
         <p className="listing-disclaimer"><CircleHelp size={15} /> Sample providers, prices, ratings and availability are for demonstration only. FixNear does not currently verify or dispatch real professionals.</p>
