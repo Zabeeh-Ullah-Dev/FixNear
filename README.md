@@ -61,7 +61,8 @@ FixNear/
 ├── src/index.css          # Responsive design system
 ├── src/main.jsx           # React entry point
 ├── index.html             # SEO and social metadata
-└── package.json
+├── package.json
+└── vite.config.js       # Vite + React plugin, base '/FixNear/' for GitHub Pages
 ```
 
 ## Demo data and privacy
